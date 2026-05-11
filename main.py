@@ -72,7 +72,7 @@ def update_graph():
         <h1>OECD 景気先行指数 (2000年〜)</h1>
     """
 
-    # インタラクティブグラフ（メイン）：2000年以降の全データ
+    # ── 1枚目：インタラクティブグラフ（rangesliderなし・ズーム自由・初期下限85） ──
     df_all = df[df['Date'] >= '2000-01-01']
 
     fig_inter = px.line(df_all, x='Date', y='OBS_VALUE', color='国名',
@@ -83,7 +83,6 @@ def update_graph():
     
     fig_inter.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
 
-    # y軸・x軸ともにズーム自由（fixedrange=False）、初期表示は85を下限に
     fig_inter.update_yaxes(range=[85, None], fixedrange=False)
     fig_inter.update_xaxes(
         fixedrange=False,
@@ -98,7 +97,6 @@ def update_graph():
             ])
         )
     )
-    # ドラッグでx軸移動、スクロールでy軸ズームできるよう dragmode を設定
     fig_inter.update_layout(dragmode='zoom')
 
     html_all += "<div class='interactive-container'>"
@@ -110,7 +108,7 @@ def update_graph():
     )
     html_all += "</div>"
 
-    # 固定グラフ（サブ）
+    # ── グラフ1〜7：サブグラフ（range_y=[85, None] のみ） ──
     html_all += "<h2>個別ピックアップグラフ（定点観測用）</h2>"
     html_all += "<div class='grid-container'>"
 
@@ -123,14 +121,10 @@ def update_graph():
                       title=group['title'],
                       labels={'OBS_VALUE': '指数', 'Date': '年月'},
                       template='plotly_white',
-                      category_orders={"国名": group['countries']})
+                      category_orders={"国名": group['countries']},
+                      range_y=[85, None])
         
         fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
-
-        # サブグラフも初期表示85を下限に、ズーム自由
-        fig.update_yaxes(range=[85, None], fixedrange=False)
-        fig.update_xaxes(fixedrange=False)
-        fig.update_layout(dragmode='zoom')
 
         html_all += "<div>" + fig.to_html(full_html=False, include_plotlyjs=False) + "</div>"
 
@@ -145,7 +139,7 @@ def update_graph():
     with open("public/index.html", "w", encoding="utf-8") as f:
         f.write(html_all)
     
-    print("成功: y軸ズーム自由・初期下限85を適用したダッシュボードを更新しました。")
+    print("成功: ダッシュボードを更新しました。")
 
 if __name__ == "__main__":
     try:
