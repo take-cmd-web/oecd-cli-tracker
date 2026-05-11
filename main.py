@@ -4,7 +4,7 @@ import os
 import requests
 import io
 
-# OECDのCSV取得URL（スイス削除、インドネシア・南アフリカ追加）
+# OECDのCSV取得URL
 URL = "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI,all/JPN+KOR+MEX+USA+G7+BRA+CHN+IND+DEU+FRA+GBR+AUS+NZL+CAN+IDN+ZAF.M.LI...AA...H?lastNObservations=600&format=csv"
 
 def update_graph():
@@ -32,21 +32,23 @@ def update_graph():
     master_order = [
         'G7', '米国', '日本', 'ドイツ', 'フランス', 'カナダ', 'イギリス',
         'オーストラリア', 'ニュージーランド',
-        '中国', '韓国', 'インド', 'インドネシア', '南アフリカ', 'メキシコ', 'ブラジル'
+        '中国', '韓国', 'インド', 'メキシコ', 'ブラジル',
+        'インドネシア', '南アフリカ'
     ]
 
-    # サブグラフの設定（タイトル・国・期間）
+    # サブグラフの設定
     groups = [
-        {"title": "主要国比較",                          "countries": ['G7', '米国', '日本', '中国', 'インド', 'ブラジル'],                    "start": "2021-01-01"},
-        {"title": "G7",                                  "countries": ['G7'],                                                               "start": "2000-01-01"},
-        {"title": "米国",                                 "countries": ['米国'],                                                             "start": "2000-01-01"},
-        {"title": "日本",                                 "countries": ['日本'],                                                             "start": "2000-01-01"},
-        {"title": "ドイツ、フランス",                     "countries": ['ドイツ', 'フランス'],                                               "start": "2000-01-01"},
-        {"title": "イギリス",                             "countries": ['イギリス'],                                                         "start": "2000-01-01"},
-        {"title": "オーストラリア、ニュージーランド、カナダ", "countries": ['オーストラリア', 'ニュージーランド', 'カナダ'],                   "start": "2000-01-01"},
-        {"title": "韓国、インド、インドネシア、南アフリカ", "countries": ['韓国', 'インド', 'インドネシア', '南アフリカ'],                    "start": "2000-01-01"},
-        {"title": "メキシコ、ブラジル",                   "countries": ['メキシコ', 'ブラジル'],                                             "start": "2000-01-01"},
-        {"title": "中国",                                 "countries": ['中国'],                                                             "start": "2000-01-01"},
+        {"title": "主要国比較",                             "countries": ['G7', '米国', '日本', '中国', 'インド', 'ブラジル'],         "start": "2021-01-01"},
+        {"title": "G7",                                     "countries": ['G7'],                                                    "start": "2000-01-01"},
+        {"title": "米国",                                    "countries": ['米国'],                                                  "start": "2000-01-01"},
+        {"title": "日本",                                    "countries": ['日本'],                                                  "start": "2000-01-01"},
+        {"title": "ドイツ、フランス",                        "countries": ['ドイツ', 'フランス'],                                    "start": "2000-01-01"},
+        {"title": "イギリス",                                "countries": ['イギリス'],                                              "start": "2000-01-01"},
+        {"title": "オーストラリア、ニュージーランド、カナダ", "countries": ['オーストラリア', 'ニュージーランド', 'カナダ'],           "start": "2000-01-01"},
+        {"title": "韓国、インド",                            "countries": ['韓国', 'インド'],                                        "start": "2000-01-01"},
+        {"title": "インドネシア、南アフリカ",                "countries": ['インドネシア', '南アフリカ'],                             "start": "2000-01-01"},
+        {"title": "メキシコ、ブラジル",                      "countries": ['メキシコ', 'ブラジル'],                                  "start": "2000-01-01"},
+        {"title": "中国",                                    "countries": ['中国'],                                                  "start": "2000-01-01"},
     ]
 
     print("マルチグラフを作成中...")
