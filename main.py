@@ -83,18 +83,12 @@ def update_graph():
     
     fig_inter.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
 
-    fig_inter.update_yaxes(
-        range=[85, None],
-        fixedrange=False,
-        rangemode="normal"
-    )
+    # y軸下限を85に固定
+    fig_inter.update_yaxes(range=[85, None])
 
+    # rangesliderは使わず、rangeselectorボタンのみ使用
     fig_inter.update_xaxes(
-        rangeslider_visible=True,
-        rangeslider=dict(
-            visible=True,
-            yaxis=dict(rangemode="fixed")
-        ),
+        rangeslider_visible=False,
         rangeselector=dict(
             buttons=list([
                 dict(count=1, label="過去1年", step="year", stepmode="backward"),
@@ -110,12 +104,12 @@ def update_graph():
     html_all += fig_inter.to_html(full_html=False, include_plotlyjs='cdn')
     html_all += (
         "<p class='usage-text'>💡 <strong>使い方：</strong>"
-        "グラフ下のバーをドラッグして期間を絞り込めます。"
+        "上部のボタンで期間を切り替えられます。"
         "右側の「国名」をクリックすると表示/非表示を切り替えられます（ダブルクリックでその国だけを表示）。</p>"
     )
     html_all += "</div>"
 
-    # 固定グラフ（サブ）：各グループの設定に従って期間を絞り込む
+    # 固定グラフ（サブ）
     html_all += "<h2>個別ピックアップグラフ（定点観測用）</h2>"
     html_all += "<div class='grid-container'>"
 
@@ -132,11 +126,7 @@ def update_graph():
         
         fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
 
-        fig.update_yaxes(
-            range=[85, None],
-            fixedrange=False,
-            rangemode="normal"
-        )
+        fig.update_yaxes(range=[85, None])
 
         html_all += "<div>" + fig.to_html(full_html=False, include_plotlyjs=False) + "</div>"
 
@@ -151,7 +141,7 @@ def update_graph():
     with open("public/index.html", "w", encoding="utf-8") as f:
         f.write(html_all)
     
-    print("成功: グラフ構成・期間・下限85を適用したダッシュボードを更新しました。")
+    print("成功: y軸下限85・グラフ構成を適用したダッシュボードを更新しました。")
 
 if __name__ == "__main__":
     try:
