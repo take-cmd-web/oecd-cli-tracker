@@ -22,20 +22,18 @@ def update_graph():
     df['国名'] = df['REF_AREA'].map(name_map).fillna(df['REF_AREA'])
     df['Date'] = pd.to_datetime(df['TIME_PERIOD'])
     
-    # 2000年以降のデータに絞り込み
-    df = df[df['Date'] >= '2000-01-01']
-    
-    # 凡例の順番（ご指定の順序）
+    # 凡例の順番
     master_order = ['G7', '米国', '日本', '中国', '韓国', 'インド', 'メキシコ', 'ブラジル']
     
+    # 各グラフの設定（countriesと期間start）
     groups = [
-        {"title": "グラフ1: 全地域比較", "countries": ['G7', '米国', '日本', '中国', '韓国', 'インド', 'メキシコ', 'ブラジル']},
-        {"title": "グラフ2: G7", "countries": ['G7']},
-        {"title": "グラフ3: 米国", "countries": ['米国']},
-        {"title": "グラフ4: 日本", "countries": ['日本']},
-        {"title": "グラフ5: 中国", "countries": ['中国']},
-        {"title": "グラフ6: 韓国、インド", "countries": ['韓国', 'インド']},
-        {"title": "グラフ7: メキシコ、ブラジル", "countries": ['メキシコ', 'ブラジル']}
+        {"title": "グラフ1: 全地域比較",        "countries": ['G7', '米国', '日本', '中国', '韓国', 'インド', 'メキシコ', 'ブラジル'], "start": "2021-01-01"},
+        {"title": "グラフ2: G7",               "countries": ['G7'],                        "start": "2000-01-01"},
+        {"title": "グラフ3: 米国",              "countries": ['米国'],                       "start": "2000-01-01"},
+        {"title": "グラフ4: 日本",              "countries": ['日本'],                       "start": "2000-01-01"},
+        {"title": "グラフ5: 韓国、インド",       "countries": ['韓国', 'インド'],              "start": "2000-01-01"},
+        {"title": "グラフ6: メキシコ、ブラジル", "countries": ['メキシコ', 'ブラジル'],        "start": "2000-01-01"},
+        {"title": "グラフ7: 中国",              "countries": ['中国'],                       "start": "2000-01-01"},
     ]
 
     print("マルチグラフを作成中...")
@@ -74,8 +72,10 @@ def update_graph():
         <h1>OECD 景気先行指数 (2000年〜)</h1>
     """
 
-    # インタラクティブグラフ（メイン）
-    fig_inter = px.line(df, x='Date', y='OBS_VALUE', color='国名',
+    # インタラクティブグラフ（メイン）：2000年以降の全データ
+    df_all = df[df['Date'] >= '2000-01-01']
+
+    fig_inter = px.line(df_all, x='Date', y='OBS_VALUE', color='国名',
                         title='【カスタム分析】期間・国 選択グラフ',
                         labels={'OBS_VALUE': '指数', 'Date': '年月'},
                         template='plotly_white',
@@ -83,11 +83,18 @@ def update_graph():
     
     fig_inter.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
 
-    # y軸の下限を85に明示的に固定（update_yaxesで上書きするのが確実）
-    fig_inter.update_yaxes(range=[85, None], fixedrange=False)
-    
+    fig_inter.update_yaxes(
+        range=[85, None],
+        fixedrange=False,
+        rangemode="normal"
+    )
+
     fig_inter.update_xaxes(
         rangeslider_visible=True,
+        rangeslider=dict(
+            visible=True,
+            yaxis=dict(rangemode="fixed")
+        ),
         rangeselector=dict(
             buttons=list([
                 dict(count=1, label="過去1年", step="year", stepmode="backward"),
@@ -108,12 +115,15 @@ def update_graph():
     )
     html_all += "</div>"
 
-    # 固定グラフ（サブ）
+    # 固定グラフ（サブ）：各グループの設定に従って期間を絞り込む
     html_all += "<h2>個別ピックアップグラフ（定点観測用）</h2>"
     html_all += "<div class='grid-container'>"
 
     for group in groups:
-        sub_df = df[df['国名'].isin(group['countries'])]
+        sub_df = df[
+            (df['国名'].isin(group['countries'])) &
+            (df['Date'] >= group['start'])
+        ]
         fig = px.line(sub_df, x='Date', y='OBS_VALUE', color='国名',
                       title=group['title'],
                       labels={'OBS_VALUE': '指数', 'Date': '年月'},
@@ -122,8 +132,11 @@ def update_graph():
         
         fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
 
-        # サブグラフも同様にy軸の下限を85に明示的に固定
-        fig.update_yaxes(range=[85, None], fixedrange=False)
+        fig.update_yaxes(
+            range=[85, None],
+            fixedrange=False,
+            rangemode="normal"
+        )
 
         html_all += "<div>" + fig.to_html(full_html=False, include_plotlyjs=False) + "</div>"
 
@@ -138,7 +151,7 @@ def update_graph():
     with open("public/index.html", "w", encoding="utf-8") as f:
         f.write(html_all)
     
-    print("成功: 下限85と凡例の順序を適用したダッシュボードを更新しました。")
+    print("成功: グラフ構成・期間・下限85を適用したダッシュボードを更新しました。")
 
 if __name__ == "__main__":
     try:
