@@ -83,11 +83,10 @@ def update_graph():
     
     fig_inter.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
 
-    # y軸下限を85に固定
-    fig_inter.update_yaxes(range=[85, None])
-
-    # rangesliderは使わず、rangeselectorボタンのみ使用
+    # y軸・x軸ともにズーム自由（fixedrange=False）、初期表示は85を下限に
+    fig_inter.update_yaxes(range=[85, None], fixedrange=False)
     fig_inter.update_xaxes(
+        fixedrange=False,
         rangeslider_visible=False,
         rangeselector=dict(
             buttons=list([
@@ -99,13 +98,15 @@ def update_graph():
             ])
         )
     )
+    # ドラッグでx軸移動、スクロールでy軸ズームできるよう dragmode を設定
+    fig_inter.update_layout(dragmode='zoom')
 
     html_all += "<div class='interactive-container'>"
     html_all += fig_inter.to_html(full_html=False, include_plotlyjs='cdn')
     html_all += (
         "<p class='usage-text'>💡 <strong>使い方：</strong>"
-        "上部のボタンで期間を切り替えられます。"
-        "右側の「国名」をクリックすると表示/非表示を切り替えられます（ダブルクリックでその国だけを表示）。</p>"
+        "上部ボタンで期間切替。グラフ上でドラッグして範囲選択ズーム、ダブルクリックでリセット。"
+        "右側の「国名」をクリックで表示/非表示切替（ダブルクリックでその国だけ表示）。</p>"
     )
     html_all += "</div>"
 
@@ -126,7 +127,10 @@ def update_graph():
         
         fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
 
-        fig.update_yaxes(range=[85, None])
+        # サブグラフも初期表示85を下限に、ズーム自由
+        fig.update_yaxes(range=[85, None], fixedrange=False)
+        fig.update_xaxes(fixedrange=False)
+        fig.update_layout(dragmode='zoom')
 
         html_all += "<div>" + fig.to_html(full_html=False, include_plotlyjs=False) + "</div>"
 
@@ -141,7 +145,7 @@ def update_graph():
     with open("public/index.html", "w", encoding="utf-8") as f:
         f.write(html_all)
     
-    print("成功: y軸下限85・グラフ構成を適用したダッシュボードを更新しました。")
+    print("成功: y軸ズーム自由・初期下限85を適用したダッシュボードを更新しました。")
 
 if __name__ == "__main__":
     try:
