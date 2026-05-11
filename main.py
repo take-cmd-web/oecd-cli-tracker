@@ -25,7 +25,7 @@ def update_graph():
     # 2000年以降のデータに絞り込み
     df = df[df['Date'] >= '2000-01-01']
     
-    # 【修正1】凡例の順番（ご指定の順序）
+    # 凡例の順番（ご指定の順序）
     master_order = ['G7', '米国', '日本', '中国', '韓国', 'インド', 'メキシコ', 'ブラジル']
     
     groups = [
@@ -75,15 +75,16 @@ def update_graph():
     """
 
     # インタラクティブグラフ（メイン）
-    # 【修正2】下限を85に固定（range_y）し、凡例の順番を指定（category_orders）
     fig_inter = px.line(df, x='Date', y='OBS_VALUE', color='国名',
                         title='【カスタム分析】期間・国 選択グラフ',
                         labels={'OBS_VALUE': '指数', 'Date': '年月'},
                         template='plotly_white',
-                        category_orders={"国名": master_order},
-                        range_y=[85, None])
+                        category_orders={"国名": master_order})
     
     fig_inter.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
+
+    # y軸の下限を85に明示的に固定（update_yaxesで上書きするのが確実）
+    fig_inter.update_yaxes(range=[85, None], fixedrange=False)
     
     fig_inter.update_xaxes(
         rangeslider_visible=True,
@@ -113,15 +114,17 @@ def update_graph():
 
     for group in groups:
         sub_df = df[df['国名'].isin(group['countries'])]
-        # ここでも下限85と凡例の順序を適用
         fig = px.line(sub_df, x='Date', y='OBS_VALUE', color='国名',
                       title=group['title'],
                       labels={'OBS_VALUE': '指数', 'Date': '年月'},
                       template='plotly_white',
-                      category_orders={"国名": group['countries']},
-                      range_y=[85, None])
+                      category_orders={"国名": group['countries']})
         
         fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
+
+        # サブグラフも同様にy軸の下限を85に明示的に固定
+        fig.update_yaxes(range=[85, None], fixedrange=False)
+
         html_all += "<div>" + fig.to_html(full_html=False, include_plotlyjs=False) + "</div>"
 
     html_all += """
