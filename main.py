@@ -22,10 +22,8 @@ def update_graph():
     df['国名'] = df['REF_AREA'].map(name_map).fillna(df['REF_AREA'])
     df['Date'] = pd.to_datetime(df['TIME_PERIOD'])
     
-    # 2000年以降のデータに絞り込み
     df = df[df['Date'] >= '2000-01-01']
     
-    # グラフのグループ分け（固定レイアウト用の7グラフ）
     groups = [
         {"title": "グラフ1: 全地域比較", "countries": ['G7', '米国', '日本', '中国', '韓国', 'インド', 'メキシコ', 'ブラジル']},
         {"title": "グラフ2: G7", "countries": ['G7']},
@@ -38,7 +36,6 @@ def update_graph():
 
     print("マルチグラフを作成中...")
     
-    # HTMLとCSSの設定
     html_all = """
     <html>
     <head>
@@ -73,9 +70,7 @@ def update_graph():
         <h1>OECD 景気先行指数 (2000年〜)</h1>
     """
 
-    # ==========================================
-    # 【追加】自由に期間と国を選べるメイングラフ
-    # ==========================================
+    # インタラクティブグラフ（メイン）
     fig_inter = px.line(df, x='Date', y='OBS_VALUE', color='国名',
                         title='【カスタム分析】期間・国 選択グラフ',
                         labels={'OBS_VALUE': '指数', 'Date': '年月'},
@@ -83,7 +78,6 @@ def update_graph():
     
     fig_inter.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
     
-    # 期間選択用のスライダーとボタンを追加
     fig_inter.update_xaxes(
         rangeslider_visible=True,
         rangeselector=dict(
@@ -97,7 +91,49 @@ def update_graph():
         )
     )
 
-    # カスタムグラフをHTMLに配置（ここでplotly.jsを読み込む）
     html_all += "<div class='interactive-container'>"
     html_all += fig_inter.to_html(full_html=False, include_plotlyjs='cdn')
-    html_all += "<p class='usage-text'>💡 <strong>使い方：</strong>グラフ下のバーをドラッグして期間を絞り込めます。右側の「国名」をクリックすると表示/非表示を切り替えられます（ダブルクリックでその
+    
+    # 【修正箇所】長い文章を短く区切って、エラーが起きないようにしました
+    html_all += (
+        "<p class='usage-text'>💡 <strong>使い方：</strong>"
+        "グラフ下のバーをドラッグして期間を絞り込めます。"
+        "右側の「国名」をクリックすると表示/非表示を切り替えられます（ダブルクリックでその国だけを表示）。</p>"
+    )
+    
+    html_all += "</div>"
+
+    # 固定グラフ（サブ）
+    html_all += "<h2>個別ピックアップグラフ（定点観測用）</h2>"
+    html_all += "<div class='grid-container'>"
+
+    for group in groups:
+        sub_df = df[df['国名'].isin(group['countries'])]
+        fig = px.line(sub_df, x='Date', y='OBS_VALUE', color='国名',
+                      title=group['title'],
+                      labels={'OBS_VALUE': '指数', 'Date': '年月'},
+                      template='plotly_white')
+        
+        fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
+        html_all += "<div>" + fig.to_html(full_html=False, include_plotlyjs=False) + "</div>"
+
+    html_all += """
+        </div>
+    </body>
+    </html>
+    """
+
+    if not os.path.exists('public'):
+        os.makedirs('public')
+    with open("public/index.html", "w", encoding="utf-8") as f:
+        f.write(html_all)
+    
+    print("成功: インタラクティブグラフを追加したダッシュボードを更新しました。")
+
+if __name__ == "__main__":
+    try:
+        update_graph()
+    except Exception as e:
+        print(f"エラーが発生しました: {e}")
+        import sys
+        sys.exit(1)
