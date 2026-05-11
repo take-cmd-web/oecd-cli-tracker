@@ -22,50 +22,82 @@ def update_graph():
     df['国名'] = df['REF_AREA'].map(name_map).fillna(df['REF_AREA'])
     df['Date'] = pd.to_datetime(df['TIME_PERIOD'])
     
-    # 【変更】2000年以降のデータに絞り込み
+    # 2000年以降のデータに絞り込み
     df = df[df['Date'] >= '2000-01-01']
     
-    # グラフのグループ分け設定
+    # グラフのグループ分け（固定レイアウト用の7グラフ）
     groups = [
         {"title": "グラフ1: 全地域比較", "countries": ['G7', '米国', '日本', '中国', '韓国', 'インド', 'メキシコ', 'ブラジル']},
-        {"title": "グラフ2: G7全体", "countries": ['G7']},
+        {"title": "グラフ2: G7", "countries": ['G7']},
         {"title": "グラフ3: 米国", "countries": ['米国']},
         {"title": "グラフ4: 日本", "countries": ['日本']},
-        {"title": "グラフ5: アジア主要国", "countries": ['中国', '韓国', 'インド']},
-        {"title": "グラフ6: ラテンアメリカ", "countries": ['メキシコ', 'ブラジル']}
+        {"title": "グラフ5: 中国", "countries": ['中国']},
+        {"title": "グラフ6: 韓国、インド", "countries": ['韓国', 'インド']},
+        {"title": "グラフ7: メキシコ、ブラジル", "countries": ['メキシコ', 'ブラジル']}
     ]
 
     print("マルチグラフを作成中...")
-    html_all = "<html><head><meta charset='utf-8'><title>OECD CLI Dashboard</title></head><body style='font-family: sans-serif; background-color: #f8f9fa; padding: 20px;'>"
-    html_all += f"<h1 style='text-align: center; color: #333;'>OECD 景気先行指数 (2000年〜)</h1>"
-
-    for group in groups:
-        sub_df = df[df['国名'].isin(group['countries'])]
-        fig = px.line(sub_df, x='Date', y='OBS_VALUE', color='国名',
-                      title=group['title'],
-                      labels={'OBS_VALUE': '指数', 'Date': '年月'},
-                      template='plotly_white')
-        
-        # 【変更】Trend(100)の文字を消し、ラインのみにする
-        fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
-        
-        # HTMLの一部（Div）として追加
-        html_all += fig.to_html(full_html=False, include_plotlyjs='cdn' if group == groups[0] else False)
-
-    html_all += "</body></html>"
-
-    # 保存
-    if not os.path.exists('public'):
-        os.makedirs('public')
-    with open("public/index.html", "w", encoding="utf-8") as f:
-        f.write(html_all)
     
-    print("成功: 6つのグラフを含むダッシュボードを更新しました。")
+    # HTMLとCSSの設定
+    html_all = """
+    <html>
+    <head>
+        <meta charset='utf-8'>
+        <title>OECD CLI Dashboard</title>
+        <style>
+            body { font-family: sans-serif; background-color: #f8f9fa; padding: 20px; }
+            h1 { text-align: center; color: #333; }
+            h2 { text-align: center; color: #555; margin-top: 50px; font-size: 1.2em; }
+            .interactive-container {
+                max-width: 1400px;
+                margin: 0 auto 30px auto;
+                background: white;
+                padding: 10px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            .usage-text { text-align: center; font-size: 14px; color: #666; margin-top: 0; }
+            .grid-container {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+                max-width: 1400px;
+                margin: 0 auto;
+            }
+            @media (max-width: 800px) {
+                .grid-container { grid-template-columns: 1fr; }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>OECD 景気先行指数 (2000年〜)</h1>
+    """
 
-if __name__ == "__main__":
-    try:
-        update_graph()
-    except Exception as e:
-        print(f"エラーが発生しました: {e}")
-        import sys
-        sys.exit(1)
+    # ==========================================
+    # 【追加】自由に期間と国を選べるメイングラフ
+    # ==========================================
+    fig_inter = px.line(df, x='Date', y='OBS_VALUE', color='国名',
+                        title='【カスタム分析】期間・国 選択グラフ',
+                        labels={'OBS_VALUE': '指数', 'Date': '年月'},
+                        template='plotly_white')
+    
+    fig_inter.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
+    
+    # 期間選択用のスライダーとボタンを追加
+    fig_inter.update_xaxes(
+        rangeslider_visible=True,
+        rangeselector=dict(
+            buttons=list([
+                dict(count=1, label="過去1年", step="year", stepmode="backward"),
+                dict(count=3, label="過去3年", step="year", stepmode="backward"),
+                dict(count=5, label="過去5年", step="year", stepmode="backward"),
+                dict(count=10, label="過去10年", step="year", stepmode="backward"),
+                dict(step="all", label="全期間")
+            ])
+        )
+    )
+
+    # カスタムグラフをHTMLに配置（ここでplotly.jsを読み込む）
+    html_all += "<div class='interactive-container'>"
+    html_all += fig_inter.to_html(full_html=False, include_plotlyjs='cdn')
+    html_all += "<p class='usage-text'>💡 <strong>使い方：</strong>グラフ下のバーをドラッグして期間を絞り込めます。右側の「国名」をクリックすると表示/非表示を切り替えられます（ダブルクリックでその
