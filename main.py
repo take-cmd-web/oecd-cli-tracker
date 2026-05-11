@@ -4,8 +4,8 @@ import os
 import requests
 import io
 
-# OECDのCSV取得URL
-URL = "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI,all/JPN+KOR+MEX+USA+G7+BRA+CHN+IND.M.LI...AA...H?lastNObservations=600&format=csv"
+# OECDのCSV取得URL（国コードを追加）
+URL = "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI,all/JPN+KOR+MEX+USA+G7+BRA+CHN+IND+DEU+FRA+GBR+AUS+NZL+CHE+CAN.M.LI...AA...H?lastNObservations=600&format=csv"
 
 def update_graph():
     print("OECDから最新データを取得中...")
@@ -17,27 +17,40 @@ def update_graph():
     
     name_map = {
         'JPN': '日本', 'KOR': '韓国', 'MEX': 'メキシコ', 'USA': '米国',
-        'G7': 'G7', 'BRA': 'ブラジル', 'CHN': '中国', 'IND': 'インド'
+        'G7': 'G7', 'BRA': 'ブラジル', 'CHN': '中国', 'IND': 'インド',
+        'DEU': 'ドイツ', 'FRA': 'フランス', 'GBR': 'イギリス',
+        'AUS': 'オーストラリア', 'NZL': 'ニュージーランド',
+        'CHE': 'スイス', 'CAN': 'カナダ'
     }
     df['国名'] = df['REF_AREA'].map(name_map).fillna(df['REF_AREA'])
     df['Date'] = pd.to_datetime(df['TIME_PERIOD'])
-    
-    # 凡例の順番
-    master_order = ['G7', '米国', '日本', '中国', '韓国', 'インド', 'メキシコ', 'ブラジル']
-    
-    # 各グラフの設定（countriesと期間start）
+
+    # メイングラフ用：2000年以降
+    df_all = df[df['Date'] >= '2000-01-01']
+
+    # 凡例の順番（メイングラフ）
+    master_order = [
+        'G7', '米国', '日本', 'ドイツ', 'フランス', 'カナダ', 'イギリス',
+        'オーストラリア', 'ニュージーランド', 'スイス',
+        '中国', '韓国', 'インド', 'メキシコ', 'ブラジル'
+    ]
+
+    # サブグラフの設定（タイトル・国・期間）
     groups = [
-        {"title": "グラフ1: 全地域比較",        "countries": ['G7', '米国', '日本', '中国', '韓国', 'インド', 'メキシコ', 'ブラジル'], "start": "2021-01-01"},
-        {"title": "グラフ2: G7",               "countries": ['G7'],                        "start": "2000-01-01"},
-        {"title": "グラフ3: 米国",              "countries": ['米国'],                       "start": "2000-01-01"},
-        {"title": "グラフ4: 日本",              "countries": ['日本'],                       "start": "2000-01-01"},
-        {"title": "グラフ5: 韓国、インド",       "countries": ['韓国', 'インド'],              "start": "2000-01-01"},
-        {"title": "グラフ6: メキシコ、ブラジル", "countries": ['メキシコ', 'ブラジル'],        "start": "2000-01-01"},
-        {"title": "グラフ7: 中国",              "countries": ['中国'],                       "start": "2000-01-01"},
+        {"title": "主要国比較",                  "countries": ['G7', '米国', '日本', '中国', 'インド', 'ブラジル'],          "start": "2021-01-01"},
+        {"title": "G7",                          "countries": ['G7'],                                                     "start": "2000-01-01"},
+        {"title": "米国",                         "countries": ['米国'],                                                   "start": "2000-01-01"},
+        {"title": "日本",                         "countries": ['日本'],                                                   "start": "2000-01-01"},
+        {"title": "ドイツ、フランス",              "countries": ['ドイツ', 'フランス'],                                      "start": "2000-01-01"},
+        {"title": "イギリス、スイス",              "countries": ['イギリス', 'スイス'],                                      "start": "2000-01-01"},
+        {"title": "オーストラリア、ニュージーランド、カナダ", "countries": ['オーストラリア', 'ニュージーランド', 'カナダ'],  "start": "2000-01-01"},
+        {"title": "韓国、インド",                 "countries": ['韓国', 'インド'],                                          "start": "2000-01-01"},
+        {"title": "メキシコ、ブラジル",            "countries": ['メキシコ', 'ブラジル'],                                    "start": "2000-01-01"},
+        {"title": "中国",                         "countries": ['中国'],                                                   "start": "2000-01-01"},
     ]
 
     print("マルチグラフを作成中...")
-    
+
     html_all = """
     <html>
     <head>
@@ -72,17 +85,14 @@ def update_graph():
         <h1>OECD 景気先行指数 (2000年〜)</h1>
     """
 
-    # ── 1枚目：インタラクティブグラフ（rangesliderなし・ズーム自由・初期下限85） ──
-    df_all = df[df['Date'] >= '2000-01-01']
-
+    # ── 最初のグラフ：インタラクティブ（ズーム自由・初期下限85・rangesliderなし） ──
     fig_inter = px.line(df_all, x='Date', y='OBS_VALUE', color='国名',
                         title='【カスタム分析】期間・国 選択グラフ',
                         labels={'OBS_VALUE': '指数', 'Date': '年月'},
                         template='plotly_white',
                         category_orders={"国名": master_order})
-    
-    fig_inter.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
 
+    fig_inter.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
     fig_inter.update_yaxes(range=[85, None], fixedrange=False)
     fig_inter.update_xaxes(
         fixedrange=False,
@@ -108,7 +118,7 @@ def update_graph():
     )
     html_all += "</div>"
 
-    # ── グラフ1〜7：サブグラフ（range_y=[85, None] のみ） ──
+    # ── サブグラフ（range_y=[85, None] 固定） ──
     html_all += "<h2>個別ピックアップグラフ（定点観測用）</h2>"
     html_all += "<div class='grid-container'>"
 
@@ -123,9 +133,8 @@ def update_graph():
                       template='plotly_white',
                       category_orders={"国名": group['countries']},
                       range_y=[85, None])
-        
-        fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
 
+        fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
         html_all += "<div>" + fig.to_html(full_html=False, include_plotlyjs=False) + "</div>"
 
     html_all += """
@@ -138,7 +147,7 @@ def update_graph():
         os.makedirs('public')
     with open("public/index.html", "w", encoding="utf-8") as f:
         f.write(html_all)
-    
+
     print("成功: ダッシュボードを更新しました。")
 
 if __name__ == "__main__":
