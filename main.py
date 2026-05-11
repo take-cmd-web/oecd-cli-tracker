@@ -87,7 +87,7 @@ def update_graph():
         <h1>OECD 景気先行指数 (2000年〜)</h1>
     """
 
-    # ── 最初のグラフ：インタラクティブ（ズーム自由・初期下限85・rangesliderなし） ──
+    # ── 最初のグラフ：インタラクティブ（ズーム自由・初期下限90・rangesliderなし） ──
     fig_inter = px.line(df_all, x='Date', y='OBS_VALUE', color='国名',
                         title='【カスタム分析】期間・国 選択グラフ',
                         labels={'OBS_VALUE': '指数', 'Date': '年月'},
@@ -95,7 +95,7 @@ def update_graph():
                         category_orders={"国名": master_order})
 
     fig_inter.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
-    fig_inter.update_yaxes(range=[85, None], fixedrange=False)
+    fig_inter.update_yaxes(range=[90, None], fixedrange=False)
     fig_inter.update_xaxes(
         fixedrange=False,
         rangeslider_visible=False,
@@ -120,7 +120,7 @@ def update_graph():
     )
     html_all += "</div>"
 
-    # ── サブグラフ（range_y=[85, None] 固定） ──
+    # ── サブグラフ（range_y=[90, None] 固定） ──
     html_all += "<h2>個別ピックアップグラフ（定点観測用）</h2>"
     html_all += "<div class='grid-container'>"
 
@@ -134,7 +134,7 @@ def update_graph():
                       labels={'OBS_VALUE': '指数', 'Date': '年月'},
                       template='plotly_white',
                       category_orders={"国名": group['countries']},
-                      range_y=[85, None])
+                      range_y=[90, None])
 
         fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.7)
         html_all += "<div>" + fig.to_html(full_html=False, include_plotlyjs=False) + "</div>"
