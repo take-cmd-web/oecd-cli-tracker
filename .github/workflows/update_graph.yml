@@ -2,7 +2,7 @@ name: Update CLI Graph
 
 on:
   schedule:
-    - cron: '0 0 * * 1' # 毎週月曜日 0:00 (UTC) 実行
+    - cron: '0 0 * * 1'
   workflow_dispatch:
 
 jobs:
