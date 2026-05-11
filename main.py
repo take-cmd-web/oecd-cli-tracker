@@ -4,22 +4,22 @@ import os
 import requests
 import io
 
-# OECDのCSV取得URL
-URL = "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI,/.M.JPN+KOR+MEX+USA+G7+BRA+CHN+IND.LI...AA...H?lastNObservations=600&format=csv"
+# 【修正箇所】URLのデータ指定部分を正しく修正しました
+# (先頭の不要なドットを削除し、ディメンションの順番をOECDの最新仕様に合わせました)
+URL = "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI,all/JPN+KOR+MEX+USA+G7+BRA+CHN+IND.M.LI...AA...H?lastNObservations=600&format=csv"
 
 def update_graph():
     print("OECDから最新データを取得中...")
     
-    # 403 Forbidden対策: 一般のブラウザからのアクセスに見せかける
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     
-    # requestsを使ってデータを取得
+    # データを取得
     response = requests.get(URL, headers=headers)
-    response.raise_for_status() # 万が一エラーがあればここでストップ
+    response.raise_for_status() 
     
-    # 取得したテキストデータをpandasで読み込む
+    # CSVデータを読み込む
     csv_data = io.StringIO(response.text)
     df = pd.read_csv(csv_data)
     
